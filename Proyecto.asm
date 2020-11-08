@@ -1,6 +1,6 @@
-ImprimeNumero MACRO numero 
-	add numero,41h
-	invoke StdOut, ADDR numero
+Imprime MACRO caracter 
+	add caracter,41h
+	invoke StdOut, ADDR caracter
 ENDM
 
 Mapeo MACRO X, Y, Rows, Columns, Size
@@ -27,12 +27,11 @@ INCLUDE \masm32\include\kernel32.inc
 INCLUDE \masm32\include\masm32.inc
 INCLUDE \masm32\include\masm32rt.inc
 .DATA
-
-msg_value  DB "Ingresar mensaje: ",0
-msg_key    DB "Ingresar clave:   ",0
 Tab        DB  0Ah
 value      DB 1 DUP(0),0
 key        DB 1 DUP(0),0
+Count      DB 0,0
+count_row   DB 0,0
 X          DB 0,0
 Y          DB 0,0
 Position   DB 0,0 
@@ -44,9 +43,13 @@ Rows    DB 1Ah,0
 Columns DB 1Ah,0
 .CODE 
 main:
+;Generar Matriz
+CALL Generate_Matrix
+
 print chr$("  Cifrado utilizando matrices  ")
 INVOKE StdOut, ADDR Tab
 print chr$(" Ingresar Opcion ")
+INVOKE StdOut, ADDR Tab
 print chr$(" Opcion 1 ")
 INVOKE StdOut, ADDR Tab
 print chr$(" Opcion 2 ")
@@ -56,13 +59,22 @@ INVOKE StdOut, ADDR Tab
 print chr$(" Opcion 4 ")
 INVOKE StdOut, ADDR Tab
 INVOKE StdIn, ADDR Option_, 10
+; convertir numero real
 SUB Option_, 30h 
+
 CMP Option_, 01h
 JE Option_1
 JMP EXIT_Main
 
 Option_1:
-CALL Generate_Matrix
+print chr$("  Ingresar Clave:  ")
+INVOKE StdOut, ADDR Tab
+INVOKE StdIn, ADDR Key, 10
+
+print chr$("  Ingresar Mensaje:  ")
+INVOKE StdOut, ADDR Tab
+INVOKE StdIn, ADDR Value, 10
+
 
 
 Generate_Matrix PROC Near
@@ -71,23 +83,29 @@ Generate_Matrix PROC Near
    XOR BX,BX
    XOR DX,DX 
    MOV X, 00h
- Cycle_Rows: ; CICLO FILAS
    MOV Y, 00h
+ Cycle_Rows: ; CICLO FILAS
    INVOKE StdOut, ADDR Tab
    Cycle_Columns: ;CICLO COLUMNAS
    Mapeo X, Y, Rows, Columns, 1     ; El resultado queda en AL [fila, columna]
    MOV Position, AL
-   ImprimeNumero Position
+   Imprime Position
 
    INC Y
    MOV CL, Y
    CMP CL, Columns
    JL Cycle_Columns
+
    ; ELSE
-   INC X 
-   MOV CL, X
+   INC count_row
+   MOV BL, count_row
+   MOV Y, BL
+   MOV X, 00h
+   INC Count
+   MOV CL, Count
    CMP CL, Rows
    JL Cycle_Rows
+
  
 Generate_Matrix ENDP
 

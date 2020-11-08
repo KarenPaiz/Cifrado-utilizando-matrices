@@ -35,9 +35,9 @@ value      DB 1 DUP(0),0
 key        DB 1 DUP(0),0
 X          DB 0,0
 Y          DB 0,0
+Position   DB 0,0 
 .DATA?
  Option_  DB ?
- Position DB ?
 .CONST ; Constantes
 ;CONTADORES
 Rows    DB 1Ah,0

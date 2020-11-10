@@ -30,17 +30,20 @@ INCLUDE \masm32\include\masm32rt.inc
 
 msg_value  DB "Ingresar mensaje: ",0
 msg_key    DB "Ingresar clave:   ",0
+matriz     DB 690 DUP(0),0
 Tab        DB  0Ah
-value      DB 10 DUP(0),0
-key        DB 10 DUP(0),0
+value      DB 100 DUP(0),0
+key        DB 100 DUP(0),0
 Count      DB 0,0
 count_row   DB 0,0
+Count_impri DW 0,0
 X          DB 0,0
 Y          DB 0,0
 Y_Aux      DB 0,0
 Position   DB 0,0 
 .DATA?
  Option_  DB ?
+ Ej_imprimir DB ?
 .CONST ; Constantes
 ;CONTADORES
 Rows    DB 1Ah,0
@@ -48,8 +51,11 @@ Columns DB 1Ah,0
 .CODE 
 main:
    ;Generar Matriz
-   CALL Generate_Matrix
+   CALL Generate_Matrix 
+   
+   CALL IMPRIMIR_MATRIZ
 
+INVOKE StdOut, ADDR Tab
 print chr$("  Cifrado utilizando matrices  ")
 INVOKE StdOut, ADDR Tab
 print chr$(" Ingresar Opcion ")
@@ -77,6 +83,16 @@ CMP Option_, 04h
 JE Option_4
 JMP EXIT_Main
 Option_1:
+ print chr$(" Ingresar clave ")
+ INVOKE StdOut, ADDR Tab
+ INVOKE StdIn, ADDR key, 100
+ INVOKE StdOut, ADDR Tab
+ print chr$(" Ingresar mensaje ")
+ INVOKE StdOut, ADDR Tab
+ INVOKE StdIn, ADDR value, 100
+
+ CALL Encrypt_1
+ JMP EXIT_Main
 
 Option_2:
 
@@ -85,10 +101,30 @@ Option_3:
 Option_4:
 
 Encrypt_1 PROC Near
- 
-
+  ; Inicializar las cadenas
 
 Encrypt_1 ENDP
+
+IMPRIMIR_MATRIZ PROC Near ;Ejemplo 
+    XOR AX, AX
+	XOR BX, BX 
+	XOR CX, CX
+    LEA EDI, matriz
+	MOV AH, 0
+	ciclo:
+	MOV BL, [EDI]
+	INC EDI
+	MOV Ej_imprimir, BL
+	INVOKE StdOut, ADDR Ej_imprimir
+	INC Count_impri
+	MOV CX, Count_impri
+	CMP CX, 2A4h
+    JE Exit_Imprimir
+	JMP ciclo
+Exit_Imprimir:
+RET
+IMPRIMIR_MATRIZ ENDP
+
 
 
 Generate_Matrix PROC Near
@@ -99,14 +135,17 @@ Generate_Matrix PROC Near
    MOV X, 00h
    MOV Y, 00h
    MOV Y_Aux, 00h
+   LEA EDI, matriz
  Cycle_Rows:                        ; CICLO FILAS
-   INVOKE StdOut, ADDR Tab
+   ;SIGUIENTE FILA
    Cycle_Columns:                   ;CICLO COLUMNAS
    Mapeo X, Y, Rows, Columns, 1     ; El resultado queda en AL [fila, columna]
    MOV Position, AL
-
-   Imprime Position
-
+   ADD Position, 41h
+   XOR EBX,EBX
+   MOV BL, Position 
+   MOV [EDI], EBX
+   INC EDI 
    INC Y
    MOV CL, Y
    CMP CL, Columns
@@ -130,16 +169,19 @@ Generate_Matrix PROC Near
 	JE Next_row
     Mapeo X, Y_Aux, Rows, Columns, 1         ; El resultado queda en AL [fila, columna]
    MOV Position, AL
-
-   Imprime Position
-
+   ADD Position, 41h
+   XOR EBX,EBX
+   MOV BL, Position 
+   MOV [EDI], EBX
+   INC EDI 
    INC Y_Aux
    MOV CL, Y_Aux
    CMP CL, count_row
    JL again_char
    JMP Next_row
 
- EXIT_Generate:                                  ;Salir de generador de codigo
+ EXIT_Generate:   ;Salir de generador de codigo
+   RET 
 Generate_Matrix ENDP
 
 

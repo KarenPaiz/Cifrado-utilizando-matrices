@@ -1,3 +1,4 @@
+;MACRO para determinar la posicion en la matriz en la que se encuentra la lentra cifrada
 Calcular_cifrado MACRO Letra_clave, Letra_mensaje, tamano, num
 XOR AX, AX
 XOR BX, BX
@@ -14,22 +15,6 @@ XOR BX, BX
  ADD AX, BX
 
  MOV num, AX
-ENDM
-Recorrer_matriz MACRO matriz, contador, letra_cifrada, num
-   LEA ESI matriz
-   MOV AH, 0
-
-   Ciclo_R:
-   MOV AL, [ESI]
-   INC ESI
-   INC num
-   MOV CL, num
-   CMP CL, contador
-   JE Salir_recorrer
-   JMP Ciclo_R
-
-Salir_recorrer:
- MOV letra_cifrada, AL
 ENDM
 
 Mapeo MACRO X, Y, Rows, Columns, Size
@@ -118,13 +103,12 @@ Option_1:
  print chr$("Unicamente letras mayusculas ")
  INVOKE StdOut, ADDR Tab
  print chr$(" Ingresar clave ")
- INVOKE StdOut, ADDR Tab
  INVOKE StdIn, ADDR key, 100
  INVOKE StdOut, ADDR Tab
  print chr$(" Ingresar mensaje ")
- INVOKE StdOut, ADDR Tab
  INVOKE StdIn, ADDR value, 100
- print chr$(" Mensaje Cifrado ")
+ INVOKE StdOut, ADDR Tab
+ print chr$(" Mensaje Cifrado: ")
  CALL Encrypt_1
  JMP EXIT_Main
 
@@ -145,16 +129,26 @@ Encrypt_1 PROC Near
    Ciclo_E1:
    MOV AL, [ESI]
    MOV BL, [EDI]
-   INC EDI
-   INC ESI
+  CMP BL, 0             ;si la cadena mensaje llega a su limite
+  JE EXIT_E1                       
+  CMP AL, 0             ;si la cadena clave llega a su fin
+  JE RETORN_KEY
 
-  MOV char_V, BL
-  MOV char_K, AL
+  INC EDI
+  INC ESI
+  
+  MOV char_V, BL       ; caracter de mensaje a evaluar
+  MOV char_K, AL       ;caracter de clave a evaluar
 
   Calcular_cifrado char_K, char_V, 26, num 
- CALL RECORRER_MATRIZ
-  ;Volver a recorrer el siguiente caracter
+  CALL RECORRER_MATRIZ
 
+  JMP Ciclo_E1                                    ;Volver a recorrer el siguiente caracter
+
+ RETORN_KEY:
+     LEA ESI, key
+	 JMP Ciclo_E1  
+ EXIT_E1:
   RET
 Encrypt_1 ENDP
 
@@ -162,20 +156,20 @@ RECORRER_MATRIZ PROC Near
    XOR AX, AX
    XOR BX, BX 
    XOR CX, CX
-   LEA EDI, matriz
+   LEA EBX, matriz
    MOV AH, 0
-   MOV num_recorrido, 0
+   MOV num_recorrido, 0 ;contador para recorrer la matriz
    Ciclo_R:
-   MOV BL, [EDI]
-   INC EDI
+   MOV AL, [EBX]
+   INC EBX
    INC num_recorrido
    MOV CX, num_recorrido
-   CMP CX, num
+   CMP CX, num       ; posicion de la matriz desada
    JG Salir_recorrer
    JMP Ciclo_R
 
 Salir_recorrer:
- MOV letra_cifrada, BL
+ MOV letra_cifrada, AL      ; nueva letra cifrada
  INVOKE StdOut, ADDR letra_cifrada
 RET
 RECORRER_MATRIZ ENDP

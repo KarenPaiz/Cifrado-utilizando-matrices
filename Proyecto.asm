@@ -1,6 +1,35 @@
-Imprime MACRO caracter 
-	add caracter,41h
-	invoke StdOut, ADDR caracter
+Calcular_cifrado MACRO Letra_clave, Letra_mensaje, tamano, num
+XOR AX, AX
+XOR BX, BX
+ SUB Letra_clave, 41h
+ SUB Letra_mensaje, 41h
+
+
+ MOV BL, tamano
+ MOV AL, Letra_clave 
+ MUL BL
+ XOR BX, BX
+ MOV BL, Letra_mensaje
+
+ ADD AX, BX
+
+ MOV num, AX
+ENDM
+Recorrer_matriz MACRO matriz, contador, letra_cifrada, num
+   LEA ESI matriz
+   MOV AH, 0
+
+   Ciclo_R:
+   MOV AL, [ESI]
+   INC ESI
+   INC num
+   MOV CL, num
+   CMP CL, contador
+   JE Salir_recorrer
+   JMP Ciclo_R
+
+Salir_recorrer:
+ MOV letra_cifrada, AL
 ENDM
 
 Mapeo MACRO X, Y, Rows, Columns, Size
@@ -27,12 +56,9 @@ INCLUDE \masm32\include\kernel32.inc
 INCLUDE \masm32\include\masm32.inc
 INCLUDE \masm32\include\masm32rt.inc
 .DATA
-
-msg_value  DB "Ingresar mensaje: ",0
-msg_key    DB "Ingresar clave:   ",0
-matriz     DB 690 DUP(0),0
-Tab        DB  0Ah
-value      DB 100 DUP(0),0
+matriz     DB 690 DUP(0), 0
+Tab        DB  0Ah, 0
+value      DB 100 DUP(0), 0
 key        DB 100 DUP(0),0
 Count      DB 0,0
 count_row   DB 0,0
@@ -41,9 +67,16 @@ X          DB 0,0
 Y          DB 0,0
 Y_Aux      DB 0,0
 Position   DB 0,0 
+num_recorrido DW 0,0
 .DATA?
- Option_  DB ?
- Ej_imprimir DB ?
+ Option_     DB ?
+ Ej_imprimir DB ? 
+ char_K      DB ?
+ char_V      DB ?
+ num_K       DB ?
+ num_V       DB ?
+ num         DW ?
+ letra_cifrada DB ?
 .CONST ; Constantes
 ;CONTADORES
 Rows    DB 1Ah,0
@@ -52,8 +85,7 @@ Columns DB 1Ah,0
 main:
    ;Generar Matriz
    CALL Generate_Matrix 
-   
-   CALL IMPRIMIR_MATRIZ
+   ;CALL IMPRIMIR_MATRIZ                      ;solo para validar las que lo guarda bien
 
 INVOKE StdOut, ADDR Tab
 print chr$("  Cifrado utilizando matrices  ")
@@ -83,6 +115,8 @@ CMP Option_, 04h
 JE Option_4
 JMP EXIT_Main
 Option_1:
+ print chr$("Unicamente letras mayusculas ")
+ INVOKE StdOut, ADDR Tab
  print chr$(" Ingresar clave ")
  INVOKE StdOut, ADDR Tab
  INVOKE StdIn, ADDR key, 100
@@ -90,7 +124,7 @@ Option_1:
  print chr$(" Ingresar mensaje ")
  INVOKE StdOut, ADDR Tab
  INVOKE StdIn, ADDR value, 100
-
+ print chr$(" Mensaje Cifrado ")
  CALL Encrypt_1
  JMP EXIT_Main
 
@@ -101,11 +135,52 @@ Option_3:
 Option_4:
 
 Encrypt_1 PROC Near
-  ; Inicializar las cadenas
+    XOR AX, AX
+	XOR BX, BX 
+	XOR CX, CX
+  ; Inicializar las cadenas 
+   LEA EDI, value
+   LEA ESI, key
+   MOV AH, 0
+   Ciclo_E1:
+   MOV AL, [ESI]
+   MOV BL, [EDI]
+   INC EDI
+   INC ESI
 
+  MOV char_V, BL
+  MOV char_K, AL
+
+  Calcular_cifrado char_K, char_V, 26, num 
+ CALL RECORRER_MATRIZ
+  ;Volver a recorrer el siguiente caracter
+
+  RET
 Encrypt_1 ENDP
 
-IMPRIMIR_MATRIZ PROC Near ;Ejemplo 
+RECORRER_MATRIZ PROC Near
+   XOR AX, AX
+   XOR BX, BX 
+   XOR CX, CX
+   LEA EDI, matriz
+   MOV AH, 0
+   MOV num_recorrido, 0
+   Ciclo_R:
+   MOV BL, [EDI]
+   INC EDI
+   INC num_recorrido
+   MOV CX, num_recorrido
+   CMP CX, num
+   JG Salir_recorrer
+   JMP Ciclo_R
+
+Salir_recorrer:
+ MOV letra_cifrada, BL
+ INVOKE StdOut, ADDR letra_cifrada
+RET
+RECORRER_MATRIZ ENDP
+
+IMPRIMIR_MATRIZ PROC Near ; Ejemplo para imprimir la matriz 
     XOR AX, AX
 	XOR BX, BX 
 	XOR CX, CX
@@ -124,7 +199,6 @@ IMPRIMIR_MATRIZ PROC Near ;Ejemplo
 Exit_Imprimir:
 RET
 IMPRIMIR_MATRIZ ENDP
-
 
 
 Generate_Matrix PROC Near
@@ -150,7 +224,7 @@ Generate_Matrix PROC Near
    MOV CL, Y
    CMP CL, Columns
    JL Cycle_Columns
-   CMP Position, 5Ah
+   CMP Position, 5Ah                           ;Validar si ya llego a Z
    JE again_char
 
    Next_row:                                  ; moverse a la siguiente fila

@@ -125,6 +125,8 @@ print chr$(" Opcion 4: Descifrar criptograma con metodo 2 ")
 INVOKE StdOut, ADDR Tab
 print chr$(" Opcion 5: ? ")
 INVOKE StdOut, ADDR Tab
+print chr$(" Opcion 6: Salir ")
+INVOKE StdOut, ADDR Tab
 print chr$(" Ingrese la opcion que desea ")
 INVOKE StdIn, ADDR Option_, 10
 ; convertir numero real
@@ -139,6 +141,10 @@ CMP Option_, 03h
 JE Option_3
 CMP Option_, 04h
 JE Option_4
+CMP Option_, 05h
+JE Option_5
+CMP Option_, 06h
+JE  EXIT_Main
 JMP EXIT_Main
 Option_1:
  print chr$("Unicamente letras mayusculas ")
@@ -151,7 +157,8 @@ Option_1:
  INVOKE StdOut, ADDR Tab
  print chr$(" Mensaje Cifrado: ")
  CALL Encrypt_1
- JMP EXIT_Main
+ INVOKE StdOut, ADDR Tab
+ JMP main
 
 Option_2:
   print chr$("Unicamente letras mayusculas ")
@@ -164,7 +171,8 @@ Option_2:
   INVOKE StdOut, ADDR Tab
   print chr$(" Mensaje Cifrado: ")
   CALL Encrypt_2
-  JMP EXIT_Main
+  INVOKE StdOut, ADDR Tab
+  JMP main
 Option_3:
 	print chr$(" Ingresar un criptograma (en MAYUSCULAS) ")
 	INVOKE StdOut, ADDR Tab
@@ -263,8 +271,9 @@ OP2C5:
 	MOV AL, [ESI]
 	CMP AL, 0
 	JNE OP2C1
-SALEOP3:		
-JMP EXIT_Main
+SALEOP3:	
+INVOKE StdOut, ADDR Tab
+JMP main
 Option_4:
 
 print chr$(" Ingresar un criptograma (en MAYUSCULAS) ")
@@ -365,7 +374,10 @@ OP4C5:
 	CMP AL, 0
 	JNE OP4C1
 SALEOP4:
-JMP EXIT_Main
+INVOKE StdOut, ADDR Tab
+JMP main
+Option_5:
+
 Encrypt_1 PROC Near
     XOR AX, AX
 	XOR BX, BX 
@@ -476,7 +488,6 @@ Exit_Imprimir:
 RET
 IMPRIMIR_MATRIZ ENDP
 
-
 Generate_Matrix PROC Near
 ;limpiar registro
    XOR AX,AX
@@ -533,7 +544,6 @@ Generate_Matrix PROC Near
  EXIT_Generate:   ;Salir de generador de codigo
    RET 
 Generate_Matrix ENDP
-
 
 EXIT_Main:
 INVOKE StdOut, ADDR Tab

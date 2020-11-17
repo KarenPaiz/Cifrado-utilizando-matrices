@@ -67,10 +67,9 @@ matriz     DB 690 DUP(0), 0
 Tab        DB  0Ah, 0
 value      DB 100 DUP(0), 0
 key        DB 100 DUP(0),0
-<<<<<<< Updated upstream
-=======
+
 cripto     DB 100 DUP(0),0
->>>>>>> Stashed changes
+
 Count      DB 0,0
 count_row   DB 0,0
 Count_impri DW 0,0
@@ -79,8 +78,7 @@ Y          DB 0,0
 Y_Aux      DB 0,0
 Position   DB 0,0 
 num_recorrido DW 0,0
-<<<<<<< Updated upstream
-=======
+
 numOP2 DB 0,0
 numOP22 DB 0,0
 texto DB 0,0
@@ -88,7 +86,7 @@ S DB 0,0
  posicion	DB 0,0
  contador DB 0,0
  aux	 DB 100 DUP(0),0
->>>>>>> Stashed changes
+
 .DATA?
  Option_     DB ?
  Ej_imprimir DB ? 
@@ -98,10 +96,7 @@ S DB 0,0
  num_V       DB ?
  num         DW ?
  letra_cifrada DB ?
-<<<<<<< Updated upstream
-=======
- 
->>>>>>> Stashed changes
+
 .CONST ; Constantes
 ;CONTADORES
 Rows    DB 1Ah,0
@@ -112,11 +107,6 @@ main:
    CALL Generate_Matrix 
    ;CALL IMPRIMIR_MATRIZ                      ;solo para validar las que lo guarda bien
 
-<<<<<<< Updated upstream
-INVOKE StdOut, ADDR Tab
-print chr$("  Cifrado utilizando matrices  ")
-=======
->>>>>>> Stashed changes
 INVOKE StdOut, ADDR Tab
 print chr$("  ---Cifrado utilizando matrices---  ")
 INVOKE StdOut, ADDR Tab

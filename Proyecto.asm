@@ -154,6 +154,17 @@ Option_1:
  JMP EXIT_Main
 
 Option_2:
+  print chr$("Unicamente letras mayusculas ")
+  INVOKE StdOut, ADDR Tab
+  print chr$(" Ingresar clave ")
+  INVOKE StdIn, ADDR key, 100
+  INVOKE StdOut, ADDR Tab
+  print chr$(" Ingresar mensaje ")
+  INVOKE StdIn, ADDR value, 100
+  INVOKE StdOut, ADDR Tab
+  print chr$(" Mensaje Cifrado: ")
+  CALL Encrypt_2
+  JMP EXIT_Main
 Option_3:
 	print chr$(" Ingresar un criptograma (en MAYUSCULAS) ")
 	INVOKE StdOut, ADDR Tab
@@ -388,6 +399,40 @@ Encrypt_1 PROC Near
  EXIT_E1:
   RET
 Encrypt_1 ENDP
+
+Encrypt_2 PROC Near
+    XOR AX, AX
+	XOR BX, BX 
+	XOR CX, CX
+  ; Inicializar las cadenas 
+   LEA EDI, value
+   LEA ESI, key
+   MOV AH, 0
+   Ciclo_E2:
+   MOV AL, [ESI]
+   MOV BL, [EDI]
+   CMP BL, 0             ;si la cadena mensaje llega a su limite
+   JE EXIT_E2                       
+   CMP AL, 0             ;si la cadena clave llega a su fin
+   JE RETORN_VALUE       ; Enviar a regitsro [ESI] el inicio del mensaje
+
+  INC EDI
+  INC ESI
+  
+  MOV char_V, BL       ; caracter de mensaje a evaluar
+  MOV char_K, AL       ;caracter de clave a evaluar
+
+  Calcular_cifrado char_K, char_V, 26, num 
+  CALL RECORRER_MATRIZ
+
+  JMP Ciclo_E2                                    ;Volver a recorrer el siguiente caracter
+
+ RETORN_VALUE:
+     LEA ESI, value
+	 JMP Ciclo_E2  
+ EXIT_E2:
+RET
+Encrypt_2 ENDP
 
 RECORRER_MATRIZ PROC Near
    XOR AX, AX

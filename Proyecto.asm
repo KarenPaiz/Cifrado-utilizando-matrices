@@ -63,20 +63,23 @@ INCLUDE \masm32\include\kernel32.inc
 INCLUDE \masm32\include\masm32.inc
 INCLUDE \masm32\include\masm32rt.inc
 .DATA
-matriz     DB 690 DUP(0), 0
-Tab        DB  0Ah, 0
-value      DB 100 DUP(0), 0
-key        DB 100 DUP(0),0
-
-cripto     DB 100 DUP(0),0
-
-Count      DB 0,0
+matriz      DB 690 DUP(0), 0
+mensaje_por DB 100 DUP(0), 0
+Tab         DB 0Ah, 0
+espacio     DB 09h, 0
+value       DB 100 DUP(0), 0
+key         DB 100 DUP(0), 0
+porcentaje  DB 25h, 0
+cripto      DB 100 DUP(0), 0
+Count_Per   DB 0,0
+Count_letra DB 0,0
+Count       DB 0,0
 count_row   DB 0,0
 Count_impri DW 0,0
-X          DB 0,0
-Y          DB 0,0
-Y_Aux      DB 0,0
-Position   DB 0,0 
+X           DB 0,0
+Y           DB 0,0
+Y_Aux       DB 0,0
+Position    DB 0,0 
 num_recorrido DW 0,0
 
 numOP2 DB 0,0
@@ -86,9 +89,14 @@ S DB 0,0
  posicion	DB 0,0
  contador DB 0,0
  aux	 DB 100 DUP(0),0
-
+ Aux_letra   DB 0, 0
+ resultado   DB 0, 0
+  digito1  DB 00h,0
+  digito2  DB 00h,0
+  digito3  DB 00h,0
+  Aux_      DB 00h
 .DATA?
- Option_     DB ?
+ Option_     DB ? 
  Ej_imprimir DB ? 
  char_K      DB ?
  char_V      DB ?
@@ -96,7 +104,6 @@ S DB 0,0
  num_V       DB ?
  num         DW ?
  letra_cifrada DB ?
-
 .CONST ; Constantes
 ;CONTADORES
 Rows    DB 1Ah,0
@@ -123,7 +130,7 @@ print chr$(" Opcion 3: Descifrar criptograma con metodo 1 ")
 INVOKE StdOut, ADDR Tab
 print chr$(" Opcion 4: Descifrar criptograma con metodo 2 ")
 INVOKE StdOut, ADDR Tab
-print chr$(" Opcion 5: ? ")
+print chr$(" Opcion 5: Obtener porcentaje dec criptograma ")
 INVOKE StdOut, ADDR Tab
 print chr$(" Opcion 6: Salir ")
 INVOKE StdOut, ADDR Tab
@@ -377,7 +384,14 @@ SALEOP4:
 INVOKE StdOut, ADDR Tab
 JMP main
 Option_5:
-
+	print chr$(" Ingresar un criptograma (en MAYUSCULAS) ")
+	INVOKE StdOut, ADDR Tab
+	print chr$(" Ingresar cadena dec mensaje cifrado ")
+	INVOKE StdOut, ADDR Tab
+	INVOKE StdIn, ADDR mensaje_por, 100
+	INVOKE StdOut, ADDR Tab
+	CALL Encrypt_5
+JMP main
 Encrypt_1 PROC Near
     XOR AX, AX
 	XOR BX, BX 
@@ -445,6 +459,150 @@ Encrypt_2 PROC Near
  EXIT_E2:
 RET
 Encrypt_2 ENDP
+
+Encrypt_5 PROC Near
+    XOR AX, AX
+	XOR BX, BX 
+	XOR CX, CX
+    ; Inicializar las cadenas
+	LEA EDI, mensaje_por
+	MOV AH, 0
+	Incrementar:  ; Optener la cantidad de palabras total
+	MOV AL, [EDI]
+	CMP AL, 0     
+	JE Siguiente
+	INC Count_Per     
+	INC EDI
+	JMP Incrementar
+	
+	XOR AX, AX
+	XOR BX, BX 
+	XOR CX, CX
+	
+	Siguiente:
+	MOV AL, Count_Per
+    LEA EDI, mensaje_por
+
+	ciclo_grande:
+	  LEA ESI, mensaje_por
+	  MOV AH, 0 
+	  MOV BL, [EDI] 
+	  CMP BL, 0
+	  JE Exit_Encrypt5
+	buscar:
+	  MOV AL, [ESI]
+	  CMP AL, 0
+	  JE avanzar_letra
+	  CMP AL, BL
+	  JE siguiente_letra
+	  INC ESI
+	  JMP buscar
+
+   siguiente_letra:
+       INC Count_letra
+	   INC ESI
+	   JMP buscar
+
+    avanzar_letra:    
+    MOV Aux_letra, BL 
+	MOV CL, 100
+    MOV AL, Count_letra
+    MUL CL      
+    MOV BL, Count_Per
+    DIV BL
+    MOV resultado, AL
+	INVOKE StdOut, ADDR Aux_letra
+	INVOKE StdOut, ADDR espacio
+	MOV BL, resultado	
+	CALL SEPARAR
+	INVOKE StdOut, ADDR porcentaje
+	INVOKE StdOut, ADDR espacio
+	print chr$(" las posibles letras son: ")
+	CALL POSIBLE_LETRA
+	INVOKE StdOut, ADDR Tab
+	MOV Count_letra, 0
+    INC EDI 
+	JMP ciclo_grande 
+
+Exit_Encrypt5:
+RET
+Encrypt_5 ENDP
+
+POSIBLE_LETRA PROC Near
+    XOR AX, AX
+	XOR BX, BX 
+	XOR CX, CX
+	CMP digito2, 49
+	JE Diez 
+	CMP digito2, 48
+	JE Unidad
+	print chr$("Porcentaje mayor a 19%")
+	JMP Exit_PL
+Diez:
+CMP digito1, 34h  ; validar si es 14%
+JE Imprimir_e
+CMP digito1, 32h ;validar si es 12%
+JE Imprimir_a
+print chr$("E") ;validar se es 9.9%
+JMP Exit_PL
+Imprimir_e:
+print chr$("E")
+JMP Exit_PL
+Imprimir_a:
+print chr$("A")
+JMP Exit_PL
+Unidad:
+CMP digito1, 39h ; validar si es 9%
+JE Imprimir_o 
+CMP digito1, 38h ; validar si es 8%
+JE Imprimir_s 
+CMP digito1, 37h ; validar si es 7.7%
+JE Imprimir_s 
+CMP digito1, 36h ; validar si es 6.6%
+JE Imprimir_n 
+CMP digito1, 35h ; validar si es 5.5%
+JE Imprimir_i 
+CMP digito1, 34h ; validar si es 4.8%
+JE Imprimir_u 
+CMP digito1, 33h ; validar si es 3.8%
+JE Imprimir_t 
+CMP digito1, 32h ; validar si es 2.7%
+JE Imprimir_m 
+CMP digito1, 31h ; validar si es 1.5%
+JE Imprimir_y
+CMP digito1, 30h ; validar si es 0.6%
+JE Imprimir_j
+JMP Exit_PL
+Imprimir_o:
+print chr$("O")
+JMP Exit_PL
+Imprimir_s:
+print chr$("S")
+JMP Exit_PL
+Imprimir_n:
+print chr$("N")
+JMP Exit_PL
+Imprimir_i:
+print chr$("I")
+JMP Exit_PL
+Imprimir_u:
+print chr$("U")
+JMP Exit_PL
+Imprimir_t:
+print chr$("T")
+JMP Exit_PL
+Imprimir_m:
+print chr$("M")
+JMP Exit_PL
+Imprimir_y:
+print chr$("Y, B")
+JMP Exit_PL
+Imprimir_j:
+print chr$("J")
+JMP Exit_PL
+Exit_PL:
+RET
+POSIBLE_LETRA ENDP
 
 RECORRER_MATRIZ PROC Near
    XOR AX, AX
@@ -544,6 +702,58 @@ Generate_Matrix PROC Near
  EXIT_Generate:   ;Salir de generador de codigo
    RET 
 Generate_Matrix ENDP
+
+SEPARAR PROC NEAR
+	MOV Aux_, 0
+	CMP BX, 64h
+	JGE CENTENAS
+	MOV digito3,30h
+	JMP EVALUARDECENAS	
+CENTENAS:
+	INC Aux_
+	Sub BX,	64H
+	CMP BX, 64H
+	JGE CENTENAS
+	MOV DL, Aux_
+	ADD DL, 30H
+	MOV digito3, DL
+	mov Aux_,0
+EVALUARDECENAS:
+	INVOKE StdOut, ADDR digito3
+	MOV digito2, 00h
+	cmp BX, 0AH
+	JGE DECENAS
+CEROD:
+	MOV digito2, 30h
+	JMP EVALUARSIMPLES	
+DECENAS:
+	INC Aux_
+	Sub BX,	0AH
+	CMP BX, 0AH
+	JGE DECENAS
+	MOV DL, Aux_
+	ADD DL, 30H
+	MOV digito2, DL
+	mov Aux_,0
+EVALUARSIMPLES:
+	INVOKE StdOut, ADDR digito2
+	cmp BX, 01H
+	JGE SIMPLES
+CEROS:
+	MOV digito1, 30h
+	JMP VOLVER
+SIMPLES:
+	INC Aux_
+	Sub BX,	01H
+	CMP BX, 00H
+	JG SIMPLES
+	MOV DL, Aux_
+	ADD DL, 30H
+	MOV digito1, DL
+VOLVER:
+	INVOKE StdOut, ADDR digito1
+RET
+SEPARAR ENDP
 
 EXIT_Main:
 INVOKE StdOut, ADDR Tab
